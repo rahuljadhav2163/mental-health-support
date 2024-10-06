@@ -1,18 +1,69 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { 
+  View, 
+  Text, 
+  ScrollView, 
+  TouchableOpacity, 
+  StyleSheet, 
+  SafeAreaView, 
+  DrawerLayoutAndroid, 
+  Animated, 
+  Platform 
+} from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
 const HomePage = () => {
-  return (
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerAnimation = useRef(new Animated.Value(0)).current;
+  const drawerRef = useRef(null);
+
+  const toggleDrawer = () => {
+    if (Platform.OS === 'android') {
+      if (drawerRef.current) {
+        if (drawerOpen) {
+          drawerRef.current.closeDrawer();
+        } else {
+          drawerRef.current.openDrawer();
+        }
+      }
+    } else {
+      Animated.timing(drawerAnimation, {
+        toValue: drawerOpen ? 0 : 1,
+        duration: 250,
+        useNativeDriver: false,
+      }).start();
+      setDrawerOpen(!drawerOpen);
+    }
+  };
+
+  const DrawerContent = () => (
+    <View style={styles.drawerContent}>
+      <Text style={styles.drawerTitle}>Menu</Text>
+      {[
+        { name: 'Profile', icon: 'user' },
+        { name: 'Settings', icon: 'settings' },
+        { name: 'About', icon: 'info' },
+        { name: 'Help', icon: 'help-circle' },
+        { name: 'Logout', icon: 'log-out' }
+      ].map((item, index) => (
+        <TouchableOpacity key={index} style={styles.drawerItem}>
+          <Feather name={item.icon} size={24} color="#8B0000" style={styles.drawerItemIcon} />
+          <Text style={styles.drawerItemText}>{item.name}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
+  const MainContent = () => (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerText}>Welcome,</Text>
         <Text style={styles.headerName}>Rahul</Text>
-        <TouchableOpacity style={styles.menuButton}>
+        <TouchableOpacity style={styles.menuButton} onPress={toggleDrawer}>
           <Feather name="menu" size={24} color="white" />
         </TouchableOpacity>
       </View>
-      
+
       <ScrollView style={styles.content}>
         <View style={styles.quickActions}>
           <TouchableOpacity style={styles.actionButton}>
@@ -71,6 +122,44 @@ const HomePage = () => {
         </View>
       </ScrollView>
     </SafeAreaView>
+  );
+
+  if (Platform.OS === 'android') {
+    return (
+      <DrawerLayoutAndroid
+        ref={drawerRef}
+        drawerWidth={250}
+        drawerPosition="left"
+        renderNavigationView={() => <DrawerContent />}
+        onDrawerOpen={() => setDrawerOpen(true)}
+        onDrawerClose={() => setDrawerOpen(false)}
+      >
+        <MainContent />
+      </DrawerLayoutAndroid>
+    );
+  }
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Animated.View
+        style={[
+          styles.drawer,
+          {
+            transform: [
+              {
+                translateX: drawerAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-250, 0],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <DrawerContent />
+      </Animated.View>
+      <MainContent />
+    </View>
   );
 };
 
@@ -201,6 +290,41 @@ const styles = StyleSheet.create({
   viewDetailsText: {
     color: '#8B0000',
     fontWeight: 'bold',
+  },
+  drawer: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 250,
+    backgroundColor: 'white',
+    zIndex: 1000,
+  },
+  drawerContent: {
+    flex: 1,
+    backgroundColor: 'white',
+    paddingTop: 50,
+    paddingHorizontal: 20,
+  },
+  drawerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#8B0000',
+  },
+  drawerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  drawerItemIcon: {
+    marginRight: 15,
+  },
+  drawerItemText: {
+    fontSize: 18,
+    color: '#333',
   },
 });
 

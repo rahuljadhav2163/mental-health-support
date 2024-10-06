@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 
@@ -9,94 +9,102 @@ const Signup = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-        <View>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }} 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      >
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View>
             <Text style={styles.title}>Mental Health Care</Text>
-        </View>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Create Your</Text>
-        <Text style={styles.headerText}>Account</Text>
-        <TouchableOpacity style={styles.menuButton}>
-          <Feather name="more-horizontal" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
-      
-      <View style={styles.formContainer}>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Full Name</Text>
-          <TextInput 
-            style={styles.input}
-            placeholder="John Smith"
-            placeholderTextColor="#888"
-          />
-          <Feather name="check" size={24} color="#4CAF50" style={styles.checkIcon} />
-        </View>
-        
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Phone or Gmail</Text>
-          <TextInput 
-            style={styles.input}
-            placeholder="Joydee@gmail.com"
-            placeholderTextColor="#888"
-            keyboardType="email-address"
-          />
-          <Feather name="check" size={24} color="#4CAF50" style={styles.checkIcon} />
-        </View>
-        
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.passwordContainer}>
-            <TextInput 
-              style={styles.passwordInput}
-              placeholder="••••••••"
-              placeholderTextColor="#888"
-              secureTextEntry={!showPassword}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Feather name={showPassword ? "eye" : "eye-off"} size={24} color="#888" />
+          </View>
+          <View style={styles.header}>
+            <Text style={styles.headerText}>Create Your</Text>
+            <Text style={styles.headerText}>Account</Text>
+            <TouchableOpacity style={styles.menuButton}>
+              <Feather name="more-horizontal" size={24} color="white" />
             </TouchableOpacity>
           </View>
-        </View>
-        
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Confirm Password</Text>
-          <View style={styles.passwordContainer}>
-            <TextInput 
-              style={styles.passwordInput}
-              placeholder="••••••••"
-              placeholderTextColor="#888"
-              secureTextEntry={!showConfirmPassword}
-            />
-            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-              <Feather name={showConfirmPassword ? "eye" : "eye-off"} size={24} color="#888" />
+
+          <View style={styles.formContainer}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Full Name</Text>
+              <TextInput 
+                style={styles.input}
+                placeholder="John Smith"
+                placeholderTextColor="#888"
+              />
+              <Feather name="check" size={24} color="#4CAF50" style={styles.checkIcon} />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Phone or Gmail</Text>
+              <TextInput 
+                style={styles.input}
+                placeholder="Joydee@gmail.com"
+                placeholderTextColor="#888"
+                keyboardType="email-address"
+              />
+              <Feather name="check" size={24} color="#4CAF50" style={styles.checkIcon} />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput 
+                  style={styles.passwordInput}
+                  placeholder="••••••••"
+                  placeholderTextColor="#888"
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Feather name={showPassword ? "eye" : "eye-off"} size={24} color="#888" />
+                </TouchableOpacity>
+              </View>
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Confirm Password</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput 
+                  style={styles.passwordInput}
+                  placeholder="••••••••"
+                  placeholderTextColor="#888"
+                  secureTextEntry={!showConfirmPassword}
+                />
+                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  <Feather name={showConfirmPassword ? "eye" : "eye-off"} size={24} color="#888" />
+                </TouchableOpacity>
+              </View>
+            </View>
+            
+            <TouchableOpacity style={styles.signUpButton}>
+              <Text style={styles.signUpText}>SIGN UP</Text>
             </TouchableOpacity>
+            
+            <View style={styles.signInContainer}>
+              <Text style={styles.signInText}>Already have an account?</Text>
+              <TouchableOpacity>
+                <Text style={styles.signInLink}> <Link href="/login">
+                    SIGN IN
+                    </Link></Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-        
-        <TouchableOpacity style={styles.signUpButton}>
-          <Text style={styles.signUpText}>SIGN UP</Text>
-        </TouchableOpacity>
-        
-        <View style={styles.signInContainer}>
-          <Text style={styles.signInText}>Already have an account?</Text>
-          <TouchableOpacity>
-            <Text style={styles.signInLink}> <Link href="/login">
-                SIGN IN
-                </Link></Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-    title:{
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: 'yellow',
-        marginTop:0,
-        padding:20
-    }, 
+  title:{
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'yellow',
+    marginTop:0,
+    padding:20
+  }, 
   container: {
     flex: 1,
     backgroundColor: '#8B0000',
