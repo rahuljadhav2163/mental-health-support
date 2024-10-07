@@ -8,7 +8,7 @@ const TabButton = ({ name, label, isActive, onPress }) => (
     <MaterialCommunityIcons
       name={name}
       size={24}
-      color={isActive ? 'red' : '#757575'}
+      color={isActive ? '#4169E1' : '#757575'}
     />
     <Text style={[styles.tabLabel, isActive && styles.activeTabLabel]}>
       {label}
@@ -62,11 +62,11 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 12,
-    color: '#757575',
+    color: '#4169E1',
     marginTop: 2,
   },
   activeTabLabel: {
-    color: 'red',
+    color: '#4169E1',
     fontWeight: 'bold',
   },
 });

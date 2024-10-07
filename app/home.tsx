@@ -8,12 +8,21 @@ import {
   SafeAreaView, 
   DrawerLayoutAndroid, 
   Animated, 
-  Platform 
+  Platform,
+  StatusBar,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  FlatList
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const HomePage = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [chatVisible, setChatVisible] = useState(false);
+  const [message, setMessage] = useState('');
+  const [chatMessages, setChatMessages] = useState([]);
   const drawerAnimation = useRef(new Animated.Value(0)).current;
   const drawerRef = useRef(null);
 
@@ -36,91 +45,164 @@ const HomePage = () => {
     }
   };
 
+  const toggleChat = () => {
+    setChatVisible(!chatVisible);
+  };
+
+  const sendMessage = () => {
+    if (message.trim()) {
+      setChatMessages([...chatMessages, { id: Date.now(), text: message, sender: 'user' }]);
+      setMessage('');
+      // Simulate a response from the chatbot
+      setTimeout(() => {
+        setChatMessages(prevMessages => [...prevMessages, { id: Date.now(), text: "Thanks for your message. How can I assist you today?", sender: 'bot' }]);
+      }, 1000);
+    }
+  };
+
   const DrawerContent = () => (
-    <View style={styles.drawerContent}>
-      <Text style={styles.drawerTitle}>Menu</Text>
+    <LinearGradient colors={['#00BFFF', '#4169E1']} style={styles.drawerContent}>
+      <Text style={styles.drawerTitle}>TogetherWeHeal</Text>
       {[
         { name: 'Profile', icon: 'user' },
+        { name: 'Journal', icon: 'book-open' },
+        { name: 'Mood Tracker', icon: 'activity' },
+        { name: 'Meditation', icon: 'headphones' },
         { name: 'Settings', icon: 'settings' },
-        { name: 'About', icon: 'info' },
         { name: 'Help', icon: 'help-circle' },
-        { name: 'Logout', icon: 'log-out' }
       ].map((item, index) => (
         <TouchableOpacity key={index} style={styles.drawerItem}>
-          <Feather name={item.icon} size={24} color="#8B0000" style={styles.drawerItemIcon} />
+          <Feather name={item.icon} size={24} color="#ffffff" style={styles.drawerItemIcon} />
           <Text style={styles.drawerItemText}>{item.name}</Text>
         </TouchableOpacity>
       ))}
-    </View>
+    </LinearGradient>
   );
 
   const MainContent = () => (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Welcome,</Text>
-        <Text style={styles.headerName}>Rahul</Text>
-        <TouchableOpacity style={styles.menuButton} onPress={toggleDrawer}>
-          <Feather name="menu" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
+      <StatusBar barStyle="dark-content" />
+      <LinearGradient colors={['#00BFFF', '#4169E1']} style={styles.header}>
+        <View style={styles.headerContent}>
+          <TouchableOpacity style={styles.menuButton} onPress={toggleDrawer}>
+            <Feather name="menu" size={24} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.headerText}>Welcome, Rahul</Text>
+          <Text style={styles.headerSubText}>How are you feeling today?</Text>
+        </View>
+      </LinearGradient>
 
       <ScrollView style={styles.content}>
         <View style={styles.quickActions}>
-          <TouchableOpacity style={styles.actionButton}>
-            <Feather name="book-open" size={24} color="#8B0000" />
-            <Text style={styles.actionText}>Journal</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
-            <Feather name="activity" size={24} color="#8B0000" />
-            <Text style={styles.actionText}>Mood Tracker</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
-            <Feather name="phone" size={24} color="#8B0000" />
-            <Text style={styles.actionText}>Get Help</Text>
-          </TouchableOpacity>
+          {[
+            { name: 'Journal', icon: 'book-open' },
+            { name: 'Mood', icon: 'smile' },
+            { name: 'Meditate', icon: 'headphones' },
+            { name: 'Get Help', icon: 'phone' },
+          ].map((item, index) => (
+            <TouchableOpacity key={index} style={styles.actionButton}>
+              <LinearGradient
+                 colors={['#00BFFF', '#4169E1']}
+                style={styles.actionGradient}
+              >
+                <Feather name={item.icon} size={24} color="white" />
+              </LinearGradient>
+              <Text style={styles.actionText}>{item.name}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
         
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Daily Reflection</Text>
-          <View style={styles.card}>
-            <Text style={styles.cardText}>How are you feeling today?</Text>
-            <TouchableOpacity style={styles.startButton}>
-              <Text style={styles.startButtonText}>Start</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.reflectionCard}>
+            <LinearGradient
+               colors={['#00BFFF', '#4169E1']}
+              style={styles.reflectionGradient}
+            >
+              <Text style={styles.reflectionText}>Take a moment to reflect on your day</Text>
+              <Feather name="chevron-right" size={24} color="white" />
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
         
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recommended Activities</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <TouchableOpacity style={styles.activityCard}>
-              <Feather name="sun" size={24} color="#8B0000" />
-              <Text style={styles.activityTitle}>Mindful Breathing</Text>
-              <Text style={styles.activityDuration}>5 min</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.activityCard}>
-              <Feather name="music" size={24} color="#8B0000" />
-              <Text style={styles.activityTitle}>Calming Sounds</Text>
-              <Text style={styles.activityDuration}>10 min</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.activityCard}>
-              <Feather name="heart" size={24} color="#8B0000" />
-              <Text style={styles.activityTitle}>Gratitude Journal</Text>
-              <Text style={styles.activityDuration}>15 min</Text>
-            </TouchableOpacity>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.activitiesScroll}>
+            {[
+              { name: 'Mindful Breathing', icon: 'wind', duration: '5 min' },
+              { name: 'Guided Meditation', icon: 'headphones', duration: '10 min' },
+              { name: 'Gratitude Journal', icon: 'heart', duration: '15 min' },
+            ].map((item, index) => (
+              <TouchableOpacity key={index} style={styles.activityCard}>
+                <LinearGradient
+                  colors={['#00BFFF', '#4169E1']}
+                  style={styles.activityGradient}
+                >
+                  <Feather name={item.icon} size={24} color="white" />
+                  <Text style={styles.activityTitle}>{item.name}</Text>
+                  <Text style={styles.activityDuration}>{item.duration}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))}
           </ScrollView>
         </View>
         
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Your Progress</Text>
           <View style={styles.progressCard}>
-            <Text style={styles.progressText}>You've completed 3 activities this week!</Text>
+            <Text style={styles.progressText}>Great job! You've completed 3 activities this week.</Text>
             <TouchableOpacity style={styles.viewDetailsButton}>
               <Text style={styles.viewDetailsText}>View Details</Text>
             </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
+
+      <TouchableOpacity style={styles.chatButton} onPress={toggleChat}>
+        <LinearGradient colors={['#00BFFF', '#4169E1']} style={styles.chatButtonGradient}>
+          <Feather name="message-circle" size={24} color="white" />
+        </LinearGradient>
+      </TouchableOpacity>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={chatVisible}
+        onRequestClose={toggleChat}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.chatModal}>
+            <View style={styles.chatHeader}>
+              <Text style={styles.modalTitle}>Chat with Us</Text>
+              <TouchableOpacity onPress={toggleChat}>
+                <Feather name="x" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={chatMessages}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <View style={[styles.messageBubble, item.sender === 'user' ? styles.userMessage : styles.botMessage]}>
+                  <Text style={styles.messageText}>{item.text}</Text>
+                </View>
+              )}
+              style={styles.chatMessages}
+            />
+            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.chatInputContainer}>
+              <TextInput
+                style={styles.chatInput}
+                placeholder="Type your message..."
+                placeholderTextColor="#aaa"
+                value={message}
+                onChangeText={setMessage}
+              />
+              <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+                <Feather name="send" size={24} color="white" />
+              </TouchableOpacity>
+            </KeyboardAvoidingView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 
@@ -164,35 +246,95 @@ const HomePage = () => {
 };
 
 const styles = StyleSheet.create({
+  drawerContent: {
+    flex: 1,
+    paddingTop: 50,
+  },
+  drawerHeader: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  drawerTitle: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginLeft:22
+  },
+  drawerBody: {
+    flex: 1,
+    paddingTop: 20,
+  },
+  drawerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+  },
+  drawerItemIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  drawerItemText: {
+    color: 'white',
+    fontSize: 19,
+    fontWeight: '500',
+    paddingLeft:10,
+    
+  },
   container: {
     flex: 1,
-    backgroundColor: '#8B0000',
+    backgroundColor: '#F5F5F5',
   },
   header: {
+    height: 180,
+    justifyContent: 'flex-end',
     padding: 20,
-    paddingTop: 40,
+  },
+  headerContent: {
+    marginBottom: 20,
+  },
+  menuButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 10 : -30,
+    right: 0,
+    zIndex: 10,
+    padding: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  chatButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    zIndex: 10,
+  },
+  chatButtonGradient: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerText: {
     color: 'white',
     fontSize: 28,
     fontWeight: 'bold',
+    marginBottom: -5
   },
-  headerName: {
+  headerSubText: {
     color: 'white',
-    fontSize: 32,
-    fontWeight: 'bold',
-  },
-  menuButton: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
+    fontSize: 18,
+    marginTop: 5,
   },
   content: {
     flex: 1,
-    backgroundColor: 'white',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    padding: 20,
+    padding: 15,
   },
   quickActions: {
     flexDirection: 'row',
@@ -201,131 +343,149 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     alignItems: 'center',
-    backgroundColor: '#FFF',
-    padding: 15,
-    borderRadius: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    width: '23%',
+  },
+  actionGradient: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   actionText: {
-    marginTop: 5,
-    color: '#8B0000',
+    fontSize: 14,
     fontWeight: 'bold',
+    color: '#555',
   },
   section: {
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#333',
   },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: 15,
+  reflectionCard: {
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  reflectionGradient: {
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardText: {
-    fontSize: 16,
-    marginBottom: 10,
-  },
-  startButton: {
-    backgroundColor: '#8B0000',
-    padding: 10,
-    borderRadius: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  startButtonText: {
+  reflectionText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  activitiesScroll: {
+    paddingVertical: 10,
   },
   activityCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 15,
-    padding: 15,
-    marginRight: 15,
-    width: 120,
+    width: 140,
+    borderRadius: 10,
+    marginRight: 10,
+    overflow: 'hidden',
+  },
+  activityGradient: {
+    padding: 20,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   activityTitle: {
-    marginTop: 5,
+    color: 'white',
     fontWeight: 'bold',
-    textAlign: 'center',
+    marginTop: 10,
   },
   activityDuration: {
+    color: 'white',
     marginTop: 5,
-    color: '#888',
   },
   progressCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 15,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 10,
+    backgroundColor: '#E0E0E0',
   },
   progressText: {
     fontSize: 16,
     marginBottom: 10,
   },
   viewDetailsButton: {
-    alignSelf: 'flex-end',
+    alignSelf: 'flex-start',
+    padding: 10,
+    backgroundColor: '#00BFFF',
+    borderRadius: 5,
   },
   viewDetailsText: {
-    color: '#8B0000',
+    color: 'white',
     fontWeight: 'bold',
   },
-  drawer: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 250,
-    backgroundColor: 'white',
-    zIndex: 1000,
-  },
-  drawerContent: {
+  modalBackground: {
     flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  chatModal: {
     backgroundColor: 'white',
-    paddingTop: 50,
-    paddingHorizontal: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: '80%',
   },
-  drawerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#8B0000',
-  },
-  drawerItem: {
+  chatHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 15,
+    padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#eee',
   },
-  drawerItemIcon: {
-    marginRight: 15,
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
   },
-  drawerItemText: {
-    fontSize: 18,
-    color: '#333',
+  chatMessages: {
+    flex: 1,
+    padding: 15,
   },
+  messageBubble: {
+    maxWidth: '80%',
+    padding: 10,
+    borderRadius: 15,
+    marginBottom: 10,
+  },
+  userMessage: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#DCF8C6',
+  },
+  botMessage: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#E8E8E8',
+  },
+  messageText: {
+    fontSize: 16,
+  },
+  chatInputContainer: {
+    flexDirection: 'row',
+    padding: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  chatInput: {
+    flex: 1,
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    marginRight: 10,
+  },
+  sendButton: {
+    width: 40,
+    height: 40,
+  },
+    
+
 });
 
 export default HomePage;
