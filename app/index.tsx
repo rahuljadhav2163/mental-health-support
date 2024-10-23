@@ -1,4 +1,4 @@
-// Index.js
+
 import React, { useState } from 'react';
 import { View, SafeAreaView, StyleSheet } from 'react-native';
 import BottomBar from './bottombar';

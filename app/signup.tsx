@@ -1,12 +1,64 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as SecureStore from 'expo-secure-store';
 
 const Signup = () => {
+  const [fullName, setFullName] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const validateForm = () => {
+    const newErrors = {};
+    const mobileRegex = /^[6-9]\d{9}$/;
+
+    if (!fullName.trim()) newErrors.fullName = 'Full name is required';
+    if (!mobileRegex.test(mobile)) newErrors.mobile = 'Enter a valid 10-digit mobile number';
+    if (password.length < 6) newErrors.password = 'Password must be at least 6 characters long';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const saveToSecureStore = async (key, value) => {
+    try {
+      await SecureStore.setItemAsync(key, JSON.stringify(value)); 
+    } catch (error) {
+      console.error('Error saving to SecureStore', error);
+    }
+  };
+
+  const handleRegister = async () => {
+    if (validateForm()) {
+      setLoading(true);
+      try {
+        const response = await fetch('https://mental-health-support-backend.vercel.app/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({fullName, mobile, password }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          Alert.alert('Success', 'Registration successful!');
+          const userData = { fullName, mobile };
+          await saveToSecureStore('userData', userData);
+          router.replace('/')          
+        } else {
+          Alert.alert('Error', data.message || 'Registration failed');
+        }
+      } catch (error) {
+        Alert.alert('Error', 'Something went wrong. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
   return (
     <LinearGradient colors={['#00BFFF', '#4169E1']} style={styles.container}>
@@ -18,7 +70,6 @@ const Signup = () => {
         >
           <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
             <View style={styles.header}>
-             
               <Text style={styles.title}>TogetherWeHeal</Text>
               <Text style={styles.headerText}>Create Your Account</Text>
               <Text style={styles.subHeaderText}>Sign up to get started</Text>
@@ -31,19 +82,25 @@ const Signup = () => {
                   style={styles.input}
                   placeholder="John Smith"
                   placeholderTextColor="#888"
+                  value={fullName}
+                  onChangeText={setFullName}
                 />
-                <Feather name="check" size={24} color="#4CAF50" style={styles.checkIcon} />
+                {errors.fullName && <Text style={styles.errorText}>{errors.fullName}</Text>}
+                <Feather name="check" size={24} color={fullName.trim() ? "#4CAF50" : "#888"} style={styles.checkIcon} />
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email</Text>
+                <Text style={styles.label}>Mobile No</Text>
                 <TextInput 
                   style={styles.input}
-                  placeholder="john@example.com"
+                  placeholder="+91 0000000000"
                   placeholderTextColor="#888"
-                  keyboardType="email-address"
+                  value={mobile}
+                  onChangeText={setMobile}
+                  keyboardType="phone-pad"
                 />
-                <Feather name="check" size={24} color="#4CAF50" style={styles.checkIcon} />
+                {errors.mobile && <Text style={styles.errorText}>{errors.mobile}</Text>}
+                <Feather name="check" size={24} color={mobile.length === 10 ? "#4CAF50" : "#888"} style={styles.checkIcon} />
               </View>
               
               <View style={styles.inputContainer}>
@@ -54,19 +111,28 @@ const Signup = () => {
                     placeholder="••••••••"
                     placeholderTextColor="#888"
                     secureTextEntry={!showPassword}
+                    value={password}
+                    onChangeText={setPassword}
                   />
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                     <Feather name={showPassword ? "eye" : "eye-off"} size={24} color="#4169E1" />
                   </TouchableOpacity>
                 </View>
+                {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
               </View>
-              
-             
-              
-              
-              <TouchableOpacity style={styles.signUpButton}>
-                <Text style={styles.signUpText}>SIGN UP</Text>
-              </TouchableOpacity>
+
+              {/* Show Activity Indicator when loading */}
+              {loading ? (
+                <ActivityIndicator size="large" color="#4169E1" style={styles.loadingIndicator} />
+              ) : (
+                <TouchableOpacity 
+                  style={[styles.signUpButton, loading && { opacity: 0.7 }]} 
+                  onPress={handleRegister} 
+                  disabled={loading} // Disable button when loading
+                >
+                  <Text style={styles.signUpText}>SIGN UP</Text>
+                </TouchableOpacity>
+              )}
               
               <View style={styles.signInContainer}>
                 <Text style={styles.signInText}>Already have an account?</Text>
@@ -83,8 +149,15 @@ const Signup = () => {
     </LinearGradient>
   );
 };
-
 const styles = StyleSheet.create({
+  loadingIndicator: {
+    marginTop: 20,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 5,
+  },
   container: {
     flex: 1,
   },

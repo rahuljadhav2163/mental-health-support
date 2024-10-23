@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, View, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Dimensions } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -24,18 +24,18 @@ function Profile() {
           
           <Text style={styles.welcomeText}>Welcome Back</Text>
           
-          <TouchableOpacity style={styles.signInButton}>
+          <TouchableOpacity style={styles.signInButton} onPress={()=>{router.push("/login")}}>
             <Link href="/login" style={styles.signInText}>
               LOGIN
             </Link>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.signUpButton}>
+         
+          <TouchableOpacity style={styles.signUpButton} onPress={()=>{router.push("/signup")}}>
             <Text style={styles.signUpText}>
-              <Link href="/signup">
                 SIGN UP
-              </Link>
             </Text>
           </TouchableOpacity>
+    
           <Text style={styles.socialText}>Or connect with</Text>
           <View style={styles.socialIcons}>
             <TouchableOpacity style={styles.iconButton}>

@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const MoodTracker = ({ visible, onClose }) => {
   const [moodHistory, setMoodHistory] = useState([]);
@@ -20,19 +19,12 @@ const MoodTracker = ({ visible, onClose }) => {
   }, []);
 
   const loadMoodHistory = async () => {
-    try {
-      const storedMoodHistory = await AsyncStorage.getItem('moodHistory');
-      if (storedMoodHistory !== null) {
-        setMoodHistory(JSON.parse(storedMoodHistory));
-      }
-    } catch (error) {
-      console.error('Error loading mood history:', error);
-    }
+   
   };
 
   const saveMoodHistory = async (newMoodHistory) => {
     try {
-      await AsyncStorage.setItem('moodHistory', JSON.stringify(newMoodHistory));
+     
     } catch (error) {
       console.error('Error saving mood history:', error);
     }
