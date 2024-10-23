@@ -5,36 +5,122 @@ import {
   TouchableOpacity, 
   StyleSheet, 
   ScrollView,
-  Modal
+  Modal,
+  Alert
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
+import * as SecureStore from 'expo-secure-store';
+
+const MOOD_HISTORY_KEY = 'mood_history_data';
 
 const MoodTracker = ({ visible, onClose }) => {
   const [moodHistory, setMoodHistory] = useState([]);
-  const moods = ['😊 Happy', '😐 Neutral', '😢 Sad', '😠 Angry', '😴 Tired','😴 Sleep'];
+  const moods = ['😊 Happy', '😐 Neutral', '😢 Sad', '😠 Angry', '😴 Tired', '😴 Sleep'];
 
   useEffect(() => {
     loadMoodHistory();
   }, []);
 
   const loadMoodHistory = async () => {
-   
+    try {
+      const storedMoodHistory = await SecureStore.getItemAsync(MOOD_HISTORY_KEY);
+      if (storedMoodHistory) {
+        setMoodHistory(JSON.parse(storedMoodHistory));
+      }
+    } catch (error) {
+      console.error('Error loading mood history:', error);
+      Alert.alert(
+        'Error',
+        'Failed to load mood history. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
   };
 
   const saveMoodHistory = async (newMoodHistory) => {
     try {
-     
+      await SecureStore.setItemAsync(
+        MOOD_HISTORY_KEY,
+        JSON.stringify(newMoodHistory)
+      );
     } catch (error) {
       console.error('Error saving mood history:', error);
+      Alert.alert(
+        'Error',
+        'Failed to save mood entry. Please try again.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
-  const trackMood = (mood) => {
-    const newMoodEntry = { mood, date: new Date().toISOString() };
-    const newMoodHistory = [newMoodEntry, ...moodHistory];
-    setMoodHistory(newMoodHistory);
-    saveMoodHistory(newMoodHistory);
+  const trackMood = async (mood) => {
+    try {
+      const newMoodEntry = {
+        mood,
+        date: new Date().toISOString(),
+        id: Date.now().toString() // Adding unique ID for each entry
+      };
+      
+      const newMoodHistory = [newMoodEntry, ...moodHistory];
+      
+      // Limit history to last 30 entries to prevent storage issues
+      const trimmedHistory = newMoodHistory.slice(0, 30);
+      
+      await saveMoodHistory(trimmedHistory);
+      setMoodHistory(trimmedHistory);
+      
+      Alert.alert(
+        'Success',
+        'Your mood has been recorded!',
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      console.error('Error tracking mood:', error);
+      Alert.alert(
+        'Error',
+        'Failed to track mood. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const clearMoodHistory = async () => {
+    Alert.alert(
+      'Clear History',
+      'Are you sure you want to clear all mood history? This cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await SecureStore.deleteItemAsync(MOOD_HISTORY_KEY);
+              setMoodHistory([]);
+              Alert.alert('Success', 'Mood history cleared successfully');
+            } catch (error) {
+              console.error('Error clearing mood history:', error);
+              Alert.alert('Error', 'Failed to clear mood history');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -75,15 +161,31 @@ const MoodTracker = ({ visible, onClose }) => {
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Mood History</Text>
-              {moodHistory.map((entry, index) => (
-                <View key={index} style={styles.historyItem}>
-                  <Text style={styles.historyMood}>{entry.mood}</Text>
-                  <Text style={styles.historyDate}>
-                    {new Date(entry.date).toLocaleString()}
-                  </Text>
-                </View>
-              ))}
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Mood History</Text>
+                {moodHistory.length > 0 && (
+                  <TouchableOpacity
+                    style={styles.clearButton}
+                    onPress={clearMoodHistory}
+                  >
+                    <Text style={styles.clearButtonText}>Clear History</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              {moodHistory.length === 0 ? (
+                <Text style={styles.emptyHistoryText}>
+                  No mood entries yet. Start tracking your mood!
+                </Text>
+              ) : (
+                moodHistory.map((entry) => (
+                  <View key={entry.id} style={styles.historyItem}>
+                    <Text style={styles.historyMood}>{entry.mood}</Text>
+                    <Text style={styles.historyDate}>
+                      {formatDate(entry.date)}
+                    </Text>
+                  </View>
+                ))
+              )}
             </View>
           </ScrollView>
         </View>
@@ -153,10 +255,25 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 20,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
+  },
+  clearButton: {
+    padding: 8,
+    backgroundColor: '#FF6B6B',
+    borderRadius: 5,
+  },
+  clearButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
   },
   historyItem: {
     flexDirection: 'row',
@@ -166,6 +283,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 10,
     marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   historyMood: {
     fontSize: 18,
@@ -173,6 +298,13 @@ const styles = StyleSheet.create({
   },
   historyDate: {
     color: '#777',
+  },
+  emptyHistoryText: {
+    textAlign: 'center',
+    color: '#666',
+    fontSize: 16,
+    marginTop: 20,
+    fontStyle: 'italic',
   },
 });
 

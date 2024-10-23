@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import * as SecureStore from 'expo-secure-store';
 import { 
   View, 
   Text, 
@@ -20,6 +21,24 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
 import MoodTracker from './moodtracker';
 
+const positiveThoughts = [
+  "Every day is a new beginning. Trust in your journey.",
+  "You have the power to create positive changes in your life.",
+  "Your mental health matters. Be gentle with yourself today.",
+  "Small steps forward are still progress worth celebrating.",
+  "You are stronger than you know and braver than you believe.",
+  "Today's difficulties are tomorrow's growth opportunities.",
+  "Your feelings are valid. It's okay to take time to process them.",
+  "Remember to celebrate your progress, no matter how small.",
+  "You deserve peace, love, and understanding.",
+  "Healing takes time. Be patient with your journey.",
+  "Your story matters. Your experiences have value.",
+  "Each breath is a chance to reset and begin again.",
+  "You are not alone. There's strength in seeking support.",
+  "Your potential is limitless. Believe in yourself.",
+  "Every moment is a fresh opportunity to choose happiness."
+];
+
 const HomePage = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [chatVisible, setChatVisible] = useState(false);
@@ -29,6 +48,16 @@ const HomePage = () => {
   const drawerAnimation = useRef(new Animated.Value(0)).current;
   const drawerRef = useRef(null);
   const [moodTrackerVisible, setMoodTrackerVisible] = useState(false);
+  const [currentThought, setCurrentThought] = useState('');
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    selectRandomThought();
+  }, []);
+  const selectRandomThought = () => {
+    const randomIndex = Math.floor(Math.random() * positiveThoughts.length);
+    setCurrentThought(positiveThoughts[randomIndex]);
+  };
 
   const toggleDrawer = () => {
     if (Platform.OS === 'android') {
@@ -144,18 +173,27 @@ const HomePage = () => {
 
   const MainContent = () => (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <LinearGradient colors={['#00BFFF', '#4169E1']} style={styles.header}>
-        <View style={styles.headerContent}>
-          <TouchableOpacity style={styles.menuButton} onPress={toggleDrawer}>
-            <Feather name="menu" size={24} color="white" />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>Welcome, Rahul</Text>
-          <Text style={styles.headerSubText}>How are you feeling today?</Text>
-        </View>
-      </LinearGradient>
+    <StatusBar barStyle="dark-content" />
+    <LinearGradient colors={['#00BFFF', '#4169E1']} style={styles.header}>
+      <View style={styles.headerContent}>
+        <Text style={styles.appname}>TogetherWeHeal</Text>
+        <TouchableOpacity style={styles.menuButton} onPress={toggleDrawer}>
+          <Feather name="menu" size={24} color="white" />
+        </TouchableOpacity>
+        <Text style={styles.headerText}>Welcome, {userName || 'Friend'}</Text>
+        <Text style={styles.headerSubText}>How are you feeling today?</Text>
+      </View>
+    </LinearGradient>
 
-      <ScrollView style={styles.content}>
+    <ScrollView style={styles.content}>
+        <View style={styles.thoughtCard}>
+          <LinearGradient
+            colors={['#4169E1', '#00BFFF']}
+            style={styles.thoughtGradient}
+          >
+            <Text style={styles.thoughtText}>{currentThought}</Text>
+          </LinearGradient>
+        </View>
         <View style={styles.quickActions}>
           {[
             { name: 'Journal', icon: 'book-open' },
@@ -216,15 +254,7 @@ const HomePage = () => {
           </ScrollView>
         </View>
         
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Progress</Text>
-          <View style={styles.progressCard}>
-            <Text style={styles.progressText}>Great job! You've completed 3 activities this week.</Text>
-            <TouchableOpacity style={styles.viewDetailsButton}>
-              <Text style={styles.viewDetailsText}>View Details</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        
       </ScrollView>
 
       <TouchableOpacity style={styles.chatButton} onPress={toggleChat}>
@@ -321,6 +351,33 @@ const HomePage = () => {
 };
 
 const styles = StyleSheet.create({
+  appname:{
+    fontSize:21,
+    color:"#ffff66"
+  },
+  thoughtCard: {
+    marginBottom: 20,
+    borderRadius: 15,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    marginTop:10
+  },
+  thoughtGradient: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  thoughtText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '500',
+    textAlign: 'center',
+    lineHeight: 24,
+    fontStyle: 'italic',
+  },
   drawerContent: {
     flex: 1,
     paddingTop: 50,
@@ -375,7 +432,7 @@ const styles = StyleSheet.create({
   },
   menuButton: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 10 : -30,
+    top: Platform.OS === 'ios' ? 10 : 5,
     right: 0,
     zIndex: 10,
     padding: 10,
@@ -399,7 +456,8 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: -5
+    marginBottom: -5,
+marginTop:10
   },
   headerSubText: {
     color: 'white',
