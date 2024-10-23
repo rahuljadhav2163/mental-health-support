@@ -1,29 +1,82 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as SecureStore from 'expo-secure-store';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [mobile, setMobile] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
+  const saveUserData = async (userData) => {
+    try {
+      await SecureStore.setItemAsync('userData', JSON.stringify(userData));
+      await SecureStore.setItemAsync('isLoggedIn', 'true');
+    } catch (error) {
+      console.error('Error saving to secure store:', error);
+    }
+  };
+
+  const handleLogin = async () => {
+    if (!mobile || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('https://mental-health-support-backend.vercel.app/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          mobile,
+          password,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success === "true") {
+        await saveUserData(result.data);
+        Alert.alert('Success', result.message);
+        router.replace('/');
+      } else {
+        Alert.alert('Error', result.message || 'Login failed');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Network error. Please try again.');
+      console.error('Login error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   return (
     <LinearGradient colors={['#00BFFF', '#4169E1']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
-          
           <Text style={styles.title}>TogetherWeHeal</Text>
           <Text style={styles.headerText}>Welcome Back</Text>
           <Text style={styles.subHeaderText}>Sign in to continue</Text>
         </View>
         <View style={styles.formContainer}>
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>Mobile NO</Text>
             <TextInput 
               style={styles.input}
-              placeholder="health@example.com"
+              placeholder="Enter mobile number"
               placeholderTextColor="#888"
-              keyboardType="email-address"
+              value={mobile}
+              onChangeText={setMobile}
+              editable={!isLoading}
+              keyboardType="phone-pad"
+              autoCapitalize="none"
             />
           </View>
           <View style={styles.inputContainer}>
@@ -34,25 +87,39 @@ const Login = () => {
                 placeholder="••••••••"
                 placeholderTextColor="#888"
                 secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+                editable={!isLoading}
+                autoCapitalize="none"
               />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} disabled={isLoading}>
                 <Feather name={showPassword ? "eye" : "eye-off"} size={24} color="#4169E1" />
               </TouchableOpacity>
             </View>
           </View>
           
-          <TouchableOpacity>
-            <Text style={styles.forgotPassword}>Forgot password?</Text>
+          <TouchableOpacity onPress={() => router.push('/forgot-password')} disabled={isLoading}>
+            <Text style={[styles.forgotPassword, isLoading && styles.disabledText]}>
+              Forgot password?
+            </Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.signInButton}>
-            <Text style={styles.signInText}>SIGN IN</Text>
+          <TouchableOpacity 
+            style={[styles.signInButton, isLoading && styles.disabledButton]}
+            onPress={handleLogin}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.signInText}>SIGN IN</Text>
+            )}
           </TouchableOpacity>
           
           <View style={styles.signUpContainer}>
             <Text style={styles.signUpText}>Don't have an account?</Text>
-            <TouchableOpacity>
-              <Text style={styles.signUpLink}>
+            <TouchableOpacity disabled={isLoading}>
+              <Text style={[styles.signUpLink, isLoading && styles.disabledText]}>
                 <Link href="/signup">SIGN UP</Link>
               </Text>
             </TouchableOpacity>
@@ -62,6 +129,7 @@ const Login = () => {
     </LinearGradient>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
