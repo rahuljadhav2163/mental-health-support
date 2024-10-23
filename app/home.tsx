@@ -17,14 +17,18 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Link } from 'expo-router';
+import MoodTracker from './moodtracker';
 
 const HomePage = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [chatVisible, setChatVisible] = useState(false);
+  const [journalModalVisible, setJournalModalVisible] = useState(false);
   const [message, setMessage] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
   const drawerAnimation = useRef(new Animated.Value(0)).current;
   const drawerRef = useRef(null);
+  const [moodTrackerVisible, setMoodTrackerVisible] = useState(false);
 
   const toggleDrawer = () => {
     if (Platform.OS === 'android') {
@@ -49,6 +53,18 @@ const HomePage = () => {
     setChatVisible(!chatVisible);
   };
 
+  const toggleJournalModal = () => {
+    setJournalModalVisible(!journalModalVisible);
+  };
+
+  const handleQuickAction = (action) => {
+    if (action === 'Journal') {
+      toggleJournalModal();
+    } else if (action === 'Mood') {
+      setMoodTrackerVisible(true);
+    }
+    // Handle other actions as needed
+  };
   const sendMessage = () => {
     if (message.trim()) {
       setChatMessages([...chatMessages, { id: Date.now(), text: message, sender: 'user' }]);
@@ -76,7 +92,54 @@ const HomePage = () => {
           <Text style={styles.drawerItemText}>{item.name}</Text>
         </TouchableOpacity>
       ))}
+
+      
     </LinearGradient>
+  );
+
+  const JournalModal = () => (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={journalModalVisible}
+      onRequestClose={toggleJournalModal}
+    >
+      <View style={styles.modalBackground}>
+        <View style={styles.journalModal}>
+          <View style={styles.journalHeader}>
+            <Text style={styles.modalTitle}>Journal</Text>
+            <TouchableOpacity onPress={toggleJournalModal}>
+              <Feather name="x" size={24} color="#333" />
+              
+            </TouchableOpacity>
+            
+          </View>
+          <ScrollView style={styles.journalContent}>
+            <Text style={styles.journalSectionTitle}>About Journaling</Text>
+            <Text style={styles.journalText}>
+              Journaling is a powerful tool for mental health and self-reflection. It can help you process emotions, track your progress, and gain insights into your thoughts and behaviors.
+            </Text>
+            <Text style={styles.journalSectionTitle}>Benefits of Journaling</Text>
+            <Text style={styles.journalText}>
+              • Reduces stress and anxiety{'\n'}
+              • Improves emotional intelligence{'\n'}
+              • Boosts memory and comprehension{'\n'}
+              • Strengthens self-discipline{'\n'}
+              • Enhances creativity
+            </Text>
+            <Text style={styles.journalSectionTitle}>Tips for Effective Journaling</Text>
+            <Text style={styles.journalText}>
+              1. Write regularly, even if it's just for a few minutes{'\n'}
+              2. Be honest and write for yourself{'\n'}
+              3. Don't worry about perfect grammar or spelling{'\n'}
+              4. Use prompts if you're stuck{'\n'}
+              5. Reflect on your entries periodically
+            </Text>
+           
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
   );
 
   const MainContent = () => (
@@ -100,23 +163,29 @@ const HomePage = () => {
             { name: 'Meditate', icon: 'headphones' },
             { name: 'Get Help', icon: 'phone' },
           ].map((item, index) => (
-            <TouchableOpacity key={index} style={styles.actionButton}>
+            <TouchableOpacity 
+              key={index} 
+              style={styles.actionButton}
+              onPress={() => handleQuickAction(item.name)}
+            >
               <LinearGradient
-                 colors={['#00BFFF', '#4169E1']}
+                colors={['#00BFFF', '#4169E1']}
                 style={styles.actionGradient}
               >
                 <Feather name={item.icon} size={24} color="white" />
               </LinearGradient>
               <Text style={styles.actionText}>{item.name}</Text>
             </TouchableOpacity>
+            
           ))}
+        
         </View>
         
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Daily Reflection</Text>
           <TouchableOpacity style={styles.reflectionCard}>
             <LinearGradient
-               colors={['#00BFFF', '#4169E1']}
+              colors={['#00BFFF', '#4169E1']}
               style={styles.reflectionGradient}
             >
               <Text style={styles.reflectionText}>Take a moment to reflect on your day</Text>
@@ -203,6 +272,12 @@ const HomePage = () => {
           </View>
         </View>
       </Modal>
+
+      <JournalModal />
+      <MoodTracker 
+      visible={moodTrackerVisible} 
+      onClose={() => setMoodTrackerVisible(false)}
+    />
     </SafeAreaView>
   );
 
@@ -259,7 +334,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 24,
     fontWeight: 'bold',
-    marginLeft:22
+    marginLeft: 22
   },
   drawerBody: {
     flex: 1,
@@ -284,8 +359,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 19,
     fontWeight: '500',
-    paddingLeft:10,
-    
+    paddingLeft: 10,
   },
   container: {
     flex: 1,
@@ -344,8 +418,7 @@ const styles = StyleSheet.create({
   actionButton: {
     alignItems: 'center',
     width: '23%',
-  },
-  actionGradient: {
+  },actionGradient: {
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -484,7 +557,48 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
   },
-    
+  journalModal: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: '80%',
+  },
+  journalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  journalContent: {
+    padding: 20,
+  },
+  journalSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+    color: '#4169E1',
+  },
+  journalText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#333',
+    marginBottom: 15,
+  },
+  startJournalingButton: {
+    backgroundColor: '#4169E1',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  startJournalingText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  }
 
 });
 

@@ -21,6 +21,9 @@ export default function RootLayout() {
       <Stack.Screen name="signup"
       options={{ headerShown: true }}
       />
+      <Stack.Screen name="moodtracker"
+      options={{ headerShown: true }}
+      />
     </Stack>
   );
 }
