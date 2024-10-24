@@ -40,6 +40,93 @@ const positiveThoughts = [
   "Every moment is a fresh opportunity to choose happiness."
 ];
 
+const CHATBOT_RESPONSES = {
+  GREETING: [
+    "Hello! I'm here to support you. How are you feeling today?",
+    "Welcome back! How can I help you today?",
+    "Hi! I'm your mental wellness companion. What's on your mind?"
+  ],
+  MOOD_CHECK: [
+    "Would you like to track your mood right now?",
+    "Have you used our mood tracker today?",
+    "Remember, tracking your mood can help you understand your emotional patterns better."
+  ],
+  MEDITATION: [
+    "Taking time to meditate can really help. Would you like to try a quick meditation session?",
+    "I can guide you through some breathing exercises. Would that help?",
+    "Let's take a moment to center ourselves. Would you like to explore our meditation guides?"
+  ],
+  JOURNALING: [
+    "Writing down your thoughts can be therapeutic. Would you like to open the journal?",
+    "Have you tried journaling today? It might help process your feelings.",
+    "Sometimes putting thoughts on paper helps clear the mind. Want to write in your journal?"
+  ],
+  EMERGENCY: [
+    "I hear that you're going through a difficult time. Would you like to see our emergency contacts?",
+    "Your well-being is important. I can connect you with professional help right away.",
+    "You don't have to face this alone. Let me show you some immediate support options."
+  ],
+  ENCOURAGEMENT: [
+    "You're taking positive steps by reaching out. That takes courage.",
+    "Remember, it's okay to have difficult days. You're doing the best you can.",
+    "You're stronger than you know, and it's okay to ask for help."
+  ]
+};
+
+const KEYWORDS = {
+  EMERGENCY: ['crisis', 'suicide', 'emergency', 'help', 'scared', 'desperate', 'hurt'],
+  ANXIETY: ['anxious', 'worried', 'nervous', 'panic', 'stress', 'overwhelmed'],
+  DEPRESSION: ['sad', 'depressed', 'lonely', 'hopeless', 'tired', 'empty'],
+  MEDITATION: ['meditate', 'calm', 'peace', 'quiet', 'breath', 'relax'],
+  MOOD: ['mood', 'feeling', 'emotions', 'feel'],
+  JOURNAL: ['write', 'journal', 'diary', 'thoughts', 'express']
+};
+
+const analyzeSentiment = (message) => {
+  message = message.toLowerCase();
+  for (const [category, words] of Object.entries(KEYWORDS)) {
+    if (words.some(word => message.includes(word))) {
+      return category;
+    }
+  }
+  return 'GENERAL';
+};
+
+const generateResponse = (message) => {
+  const sentiment = analyzeSentiment(message);
+  let response = '';
+  let action = null;
+
+  switch (sentiment) {
+    case 'EMERGENCY':
+      response = CHATBOT_RESPONSES.EMERGENCY[Math.floor(Math.random() * CHATBOT_RESPONSES.EMERGENCY.length)];
+      action = 'SHOW_HELP_MODAL';
+      break;
+    case 'ANXIETY':
+    case 'DEPRESSION':
+      response = CHATBOT_RESPONSES.MEDITATION[Math.floor(Math.random() * CHATBOT_RESPONSES.MEDITATION.length)];
+      action = 'SHOW_MEDITATION_MODAL';
+      break;
+    case 'MEDITATION':
+      response = "I'll open our meditation guide for you. Which type would you like to try?";
+      action = 'SHOW_MEDITATION_MODAL';
+      break;
+    case 'MOOD':
+      response = CHATBOT_RESPONSES.MOOD_CHECK[Math.floor(Math.random() * CHATBOT_RESPONSES.MOOD_CHECK.length)];
+      action = 'SHOW_MOOD_TRACKER';
+      break;
+    case 'JOURNAL':
+      response = CHATBOT_RESPONSES.JOURNALING[Math.floor(Math.random() * CHATBOT_RESPONSES.JOURNALING.length)];
+      action = 'SHOW_JOURNAL_MODAL';
+      break;
+    default:
+      response = CHATBOT_RESPONSES.ENCOURAGEMENT[Math.floor(Math.random() * CHATBOT_RESPONSES.ENCOURAGEMENT.length)];
+      action = null;
+  }
+
+  return { text: response, action };
+};
+
 const HomePage = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [chatVisible, setChatVisible] = useState(false);
@@ -56,6 +143,23 @@ const HomePage = () => {
   const [selectedMeditation, setSelectedMeditation] = useState(null);
   const [activityModalVisible, setActivityModalVisible] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
+
+  const handleChatbotAction = (action) => {
+    switch (action) {
+      case 'SHOW_HELP_MODAL':
+        setHelpModalVisible(true);
+        break;
+      case 'SHOW_MEDITATION_MODAL':
+        setMeditationModalVisible(true);
+        break;
+      case 'SHOW_MOOD_TRACKER':
+        setMoodTrackerVisible(true);
+        break;
+      case 'SHOW_JOURNAL_MODAL':
+        setJournalModalVisible(true);
+        break;
+    }
+  };
 
 
   const recommendedActivities = [
@@ -336,17 +440,53 @@ const HomePage = () => {
   const callEmergency = (number) => {
     Linking.openURL(`tel:${number}`);
   };
+
   const sendMessage = () => {
     if (message.trim()) {
-      setChatMessages([...chatMessages, { id: Date.now(), text: message, sender: 'user' }]);
+      // Add user message
+      const userMessage = {
+        id: Date.now(),
+        text: message,
+        sender: 'user'
+      };
+      setChatMessages(prevMessages => [...prevMessages, userMessage]);
       setMessage('');
-      // Simulate a response from the chatbot
+
+      // Generate and add bot response
+      const { text, action } = generateResponse(message);
       setTimeout(() => {
-        setChatMessages(prevMessages => [...prevMessages, { id: Date.now(), text: "Thanks for your message. How can I assist you today?", sender: 'bot' }]);
+        setChatMessages(prevMessages => [
+          ...prevMessages,
+          {
+            id: Date.now(),
+            text: text,
+            sender: 'bot'
+          }
+        ]);
+
+        if (action) {
+          handleChatbotAction(action);
+        }
       }, 1000);
     }
   };
 
+  const ChatSuggestions = () => (
+    <View style={styles.suggestionsContainer}>
+      {['I need help', 'Feeling anxious', 'Want to meditate', 'Track my mood'].map((suggestion, index) => (
+        <TouchableOpacity
+          key={index}
+          style={styles.suggestionButton}
+          onPress={() => {
+            setMessage(suggestion);
+            sendMessage();
+          }}
+        >
+          <Text style={styles.suggestionText}>{suggestion}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
 
   const MeditationModal = () => (
     <Modal
@@ -675,6 +815,7 @@ const HomePage = () => {
               )}
               style={styles.chatMessages}
             />
+            <ChatSuggestions />
             <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.chatInputContainer}>
               <TextInput
                 style={styles.chatInput}
@@ -684,7 +825,7 @@ const HomePage = () => {
                 onChangeText={setMessage}
               />
               <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-                <Feather name="send" size={24} color="white" />
+              <Feather name="arrow-right-circle" size={24} color="black" />
               </TouchableOpacity>
             </KeyboardAvoidingView>
           </View>
@@ -746,6 +887,41 @@ const HomePage = () => {
 };
 
 const styles = StyleSheet.create({
+  suggestionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 10,
+    justifyContent: 'center',
+  },
+  suggestionButton: {
+    backgroundColor: '#E3F2FD',
+    padding: 8,
+    borderRadius: 20,
+    margin: 5,
+  },
+  suggestionText: {
+    color: '#1976D2',
+    fontSize: 14,
+  },
+  messageBubble: {
+    maxWidth: '80%',
+    padding: 12,
+    borderRadius: 20,
+    marginVertical: 5,
+    marginHorizontal: 10,
+  },
+  userMessage: {
+    backgroundColor: '#E3F2FD',
+    alignSelf: 'flex-end',
+  },
+  botMessage: {
+    backgroundColor: '#F5F5F5',
+    alignSelf: 'flex-start',
+  },
+  messageText: {
+    fontSize: 16,
+    color: '#333',
+  },
   activityModal: {
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
@@ -1238,6 +1414,7 @@ const styles = StyleSheet.create({
   sendButton: {
     width: 40,
     height: 40,
+    marginTop:10
   },
   journalModal: {
     backgroundColor: 'white',

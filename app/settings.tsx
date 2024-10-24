@@ -167,18 +167,18 @@ const styles = StyleSheet.create({
     },
     header: {
       padding: 20,
-      backgroundColor: '#00B2FF', // Changed to match the top gradient color
-      borderBottomWidth: 0, // Removed border to match design
+      backgroundColor: '#00B2FF',
+      borderBottomWidth: 0,
       borderBottomColor: 'transparent',
     },
     headerTitle: {
       fontSize: 24,
       fontWeight: 'bold',
-      color: '#fff', // Changed to white to match design
+      color: '#fff',
     },
     headerSubtitle: {
       fontSize: 14,
-      color: '#fff', // Changed to white to match design
+      color: '#fff', 
       marginTop: 5,
     },
     section: {
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     sectionTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#0099FF', // Changed to match the app's blue
+      color: '#0099FF', 
       padding: 15,
       backgroundColor: '#f8f8f8',
     },
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     logoutButton: {
       margin: 20,
       padding: 15,
-      backgroundColor: '#0099FF', // Changed to match the app's blue instead of red
+      backgroundColor: '#0099FF', 
       borderRadius: 8,
       alignItems: 'center',
     }
