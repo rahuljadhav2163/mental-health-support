@@ -93,10 +93,9 @@ function Profile() {
                 <MaterialCommunityIcons name="account-edit" size={24} color="#4169E1" />
                 <Text style={styles.actionButtonText}>Edit Profile</Text>
               </TouchableOpacity>
-
               <TouchableOpacity 
                 style={styles.actionButton}
-                onPress={() => router.push("/")}
+                onPress={() => router.push("/settings")}
               >
                 <MaterialCommunityIcons name="cog" size={24} color="#4169E1" />
                 <Text style={styles.actionButtonText}>Settings</Text>

@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { 
-  View, 
-  Text, 
-  ScrollView, 
-  TouchableOpacity, 
-  StyleSheet, 
-  SafeAreaView, 
-  DrawerLayoutAndroid, 
-  Animated, 
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  DrawerLayoutAndroid,
+  Animated,
   Platform,
   StatusBar,
   Modal,
@@ -59,9 +59,9 @@ const HomePage = () => {
 
 
   const recommendedActivities = [
-    { 
-      name: 'Mindful Breathing', 
-      icon: 'wind', 
+    {
+      name: 'Mindful Breathing',
+      icon: 'wind',
       duration: '5 min',
       description: 'A simple breathing exercise to reduce stress and anxiety',
       steps: [
@@ -79,9 +79,9 @@ const HomePage = () => {
         'Can be done anywhere, anytime'
       ]
     },
-    { 
-      name: 'Guided Meditation', 
-      icon: 'headphones', 
+    {
+      name: 'Guided Meditation',
+      icon: 'headphones',
       duration: '10 min',
       description: 'A guided meditation session for inner peace and clarity',
       steps: [
@@ -99,9 +99,9 @@ const HomePage = () => {
         'Reduces negative thinking patterns'
       ]
     },
-    { 
-      name: 'Gratitude Journal', 
-      icon: 'heart', 
+    {
+      name: 'Gratitude Journal',
+      icon: 'heart',
       duration: '15 min',
       description: 'Practice gratitude by writing down things youre thankful for',
       steps: [
@@ -181,7 +181,7 @@ const HomePage = () => {
     }
   ];
 
-  
+
 
 
   const handleActivitySelect = (activity) => {
@@ -214,9 +214,9 @@ const HomePage = () => {
                 <Text style={styles.activityDurationLarge}>{selectedActivity?.duration}</Text>
               </LinearGradient>
             </View>
-            
+
             <Text style={styles.activityDescription}>{selectedActivity?.description}</Text>
-            
+
             <Text style={styles.sectionHeader}>Steps to Follow:</Text>
             {selectedActivity?.steps.map((step, index) => (
               <View key={index} style={styles.stepItem}>
@@ -235,7 +235,7 @@ const HomePage = () => {
               </View>
             ))}
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.startActivityButton}
               onPress={() => {
                 setActivityModalVisible(false);
@@ -271,6 +271,24 @@ const HomePage = () => {
     const randomIndex = Math.floor(Math.random() * positiveThoughts.length);
     setCurrentThought(positiveThoughts[randomIndex]);
   };
+
+  const Profile = () => {
+    return (
+      <View style={styles.container}>
+        <LinearGradient colors={['#00BFFF', '#4169E1']} style={styles.header}>
+          <Text style={styles.headerText}>Profile</Text>
+        </LinearGradient>
+        <View style={styles.content}>
+          <Text style={styles.title}>Your Profile</Text>
+          {/* Add profile content here */}
+        </View>
+      </View>
+    );
+  };
+
+
+
+
 
   const toggleDrawer = () => {
     if (Platform.OS === 'android') {
@@ -438,26 +456,62 @@ const HomePage = () => {
     </Modal>
   );
 
-  const DrawerContent = () => (
-    <LinearGradient colors={['#00BFFF', '#4169E1']} style={styles.drawerContent}>
-      <Text style={styles.drawerTitle}>TogetherWeHeal</Text>
-      {[
-        { name: 'Profile', icon: 'user' },
-        { name: 'Journal', icon: 'book-open' },
-        { name: 'Mood Tracker', icon: 'activity' },
-        { name: 'Meditation', icon: 'headphones' },
-        { name: 'Settings', icon: 'settings' },
-        { name: 'Help', icon: 'help-circle' },
-      ].map((item, index) => (
-        <TouchableOpacity key={index} style={styles.drawerItem}>
-          <Feather name={item.icon} size={24} color="#ffffff" style={styles.drawerItemIcon} />
-          <Text style={styles.drawerItemText}>{item.name}</Text>
-        </TouchableOpacity>
-      ))}
+  const DrawerContent = () => {
+    const handleNavigation = (screenName) => {
+      switch (screenName) {
+        case 'Profile':
+          router.push('/profile');
+          break;
+        case 'Journal':
+          setJournalModalVisible(true);
+          break;
+        case 'Mood Tracker':
+          setMoodTrackerVisible(true);
+          break;
+        case 'Meditation':
+          setMeditationModalVisible(true);
+          break;
+        case 'Settings':
+          router.push('/settings');
+          break;
+        case 'Help':
+          setHelpModalVisible(true);
+          break;
+        default:
+          break;
+      }
 
-      
-    </LinearGradient>
-  );
+      // Close drawer after navigation
+      if (Platform.OS === 'android') {
+        drawerRef.current?.closeDrawer();
+      } else {
+        setDrawerOpen(false);
+      }
+    };
+
+    return (
+      <LinearGradient colors={['#00BFFF', '#4169E1']} style={styles.drawerContent}>
+        <Text style={styles.drawerTitle}>TogetherWeHeal</Text>
+        {[
+          { name: 'Profile', icon: 'user', route: '/profile' },
+          { name: 'Journal', icon: 'book-open', route: 'journal' },
+          { name: 'Mood Tracker', icon: 'activity', route: 'mood' },
+          { name: 'Meditation', icon: 'headphones', route: 'meditation' },
+          { name: 'Settings', icon: 'settings', route: '/settings' },
+          { name: 'Help', icon: 'help-circle', route: 'help' },
+        ].map((item, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.drawerItem}
+            onPress={() => handleNavigation(item.name)}
+          >
+            <Feather name={item.icon} size={24} color="#ffffff" style={styles.drawerItemIcon} />
+            <Text style={styles.drawerItemText}>{item.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </LinearGradient>
+    );
+  };
 
   const JournalModal = () => (
     <Modal
@@ -472,9 +526,9 @@ const HomePage = () => {
             <Text style={styles.modalTitle}>Journal</Text>
             <TouchableOpacity onPress={toggleJournalModal}>
               <Feather name="x" size={24} color="#333" />
-              
+
             </TouchableOpacity>
-            
+
           </View>
           <ScrollView style={styles.journalContent}>
             <Text style={styles.journalSectionTitle}>About Journaling</Text>
@@ -497,7 +551,7 @@ const HomePage = () => {
               4. Use prompts if you're stuck{'\n'}
               5. Reflect on your entries periodically
             </Text>
-           
+
           </ScrollView>
         </View>
       </View>
@@ -509,8 +563,8 @@ const HomePage = () => {
       <Text style={styles.sectionTitle}>Recommended Activities</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.activitiesScroll}>
         {recommendedActivities.map((item, index) => (
-          <TouchableOpacity 
-            key={index} 
+          <TouchableOpacity
+            key={index}
             style={styles.activityCard}
             onPress={() => handleActivitySelect(item)}
           >
@@ -551,7 +605,7 @@ const HomePage = () => {
             <Text style={styles.thoughtText}>"{currentThought}"</Text>
           </LinearGradient>
         </View>
-        
+
         <View style={styles.quickActions}>
           {[
             { name: 'Journal', icon: 'book-open' },
@@ -559,8 +613,8 @@ const HomePage = () => {
             { name: 'Meditate', icon: 'headphones' },
             { name: 'Get Help', icon: 'phone' },
           ].map((item, index) => (
-            <TouchableOpacity 
-              key={index} 
+            <TouchableOpacity
+              key={index}
               style={styles.actionButton}
               onPress={() => handleQuickAction(item.name)}
             >
@@ -574,7 +628,7 @@ const HomePage = () => {
             </TouchableOpacity>
           ))}
         </View>
-        
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Meeting With Professional</Text>
           <TouchableOpacity style={styles.reflectionCard}>
@@ -587,7 +641,7 @@ const HomePage = () => {
             </LinearGradient>
           </TouchableOpacity>
         </View>
-        
+
         <RecommendedActivities />
       </ScrollView>
 
@@ -641,8 +695,8 @@ const HomePage = () => {
       <MeditationModal />
       <HelpModal />
       <ActivityModal />
-      <MoodTracker 
-        visible={moodTrackerVisible} 
+      <MoodTracker
+        visible={moodTrackerVisible}
         onClose={() => setMoodTrackerVisible(false)}
       />
     </SafeAreaView>
@@ -921,9 +975,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
     textAlign: 'center',
   },
-  appname:{
-    fontSize:21,
-    color:"#ffff66"
+  appname: {
+    fontSize: 21,
+    color: "#ffff66"
   },
   thoughtCard: {
     marginBottom: 20,
@@ -934,7 +988,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    marginTop:10
+    marginTop: 10
   },
   thoughtGradient: {
     padding: 20,
@@ -1027,7 +1081,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: -5,
-marginTop:10
+    marginTop: 10
   },
   headerSubText: {
     color: 'white',
@@ -1046,7 +1100,7 @@ marginTop:10
   actionButton: {
     alignItems: 'center',
     width: '23%',
-  },actionGradient: {
+  }, actionGradient: {
     width: 60,
     height: 60,
     borderRadius: 30,
