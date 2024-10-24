@@ -14,11 +14,12 @@ import {
   Modal,
   TextInput,
   KeyboardAvoidingView,
-  FlatList
+  FlatList,
+  Linking
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import MoodTracker from './moodtracker';
 
 const positiveThoughts = [
@@ -50,6 +51,218 @@ const HomePage = () => {
   const [moodTrackerVisible, setMoodTrackerVisible] = useState(false);
   const [currentThought, setCurrentThought] = useState('');
   const [userName, setUserName] = useState('');
+  const [meditationModalVisible, setMeditationModalVisible] = useState(false);
+  const [helpModalVisible, setHelpModalVisible] = useState(false);
+  const [selectedMeditation, setSelectedMeditation] = useState(null);
+  const [activityModalVisible, setActivityModalVisible] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState(null);
+
+
+  const recommendedActivities = [
+    { 
+      name: 'Mindful Breathing', 
+      icon: 'wind', 
+      duration: '5 min',
+      description: 'A simple breathing exercise to reduce stress and anxiety',
+      steps: [
+        'Find a comfortable seated position',
+        'Close your eyes and take a deep breath',
+        'Inhale for 4 counts through your nose',
+        'Hold the breath for 4 counts',
+        'Exhale for 4 counts through your mouth',
+        'Repeat this cycle 10 times'
+      ],
+      benefits: [
+        'Reduces stress and anxiety',
+        'Improves focus and concentration',
+        'Helps regulate emotions',
+        'Can be done anywhere, anytime'
+      ]
+    },
+    { 
+      name: 'Guided Meditation', 
+      icon: 'headphones', 
+      duration: '10 min',
+      description: 'A guided meditation session for inner peace and clarity',
+      steps: [
+        'Find a quiet, comfortable space',
+        'Put on headphones if available',
+        'Close your eyes and focus on your breath',
+        'Follow the guided visualization',
+        'Notice your thoughts without judgment',
+        'Slowly return to awareness when finished'
+      ],
+      benefits: [
+        'Promotes emotional balance',
+        'Enhances self-awareness',
+        'Improves sleep quality',
+        'Reduces negative thinking patterns'
+      ]
+    },
+    { 
+      name: 'Gratitude Journal', 
+      icon: 'heart', 
+      duration: '15 min',
+      description: 'Practice gratitude by writing down things youre thankful for',
+      steps: [
+        'Open your journal or notes app',
+        'Write down 3 things youre grateful for today',
+        'Reflect on why these things matter to you',
+        'Add specific details about each item',
+        'Notice how you feel after writing',
+        'Make this a daily practice'
+      ],
+      benefits: [
+        'Increases positive emotions',
+        'Builds resilience',
+        'Improves self-esteem',
+        'Enhances overall well-being'
+      ]
+    }
+  ];
+
+  const meditations = [
+    {
+      id: 1,
+      title: "Breathing Exercise",
+      duration: "5 min",
+      description: "Simple breathing exercise for stress relief",
+      steps: [
+        "Find a comfortable position",
+        "Breathe in through your nose for 4 counts",
+        "Hold for 4 counts",
+        "Exhale through mouth for 4 counts",
+        "Repeat 10 times"
+      ]
+    },
+    {
+      id: 2,
+      title: "Body Scan Meditation",
+      duration: "10 min",
+      description: "Progressive relaxation from head to toe",
+      steps: [
+        "Lie down comfortably",
+        "Close your eyes and take deep breaths",
+        "Focus attention on your head",
+        "Slowly move awareness down your body",
+        "Release tension in each area"
+      ]
+    },
+    {
+      id: 3,
+      title: "Mindful Walking",
+      duration: "15 min",
+      description: "Walking meditation for awareness",
+      steps: [
+        "Find a quiet path to walk",
+        "Walk at a natural pace",
+        "Notice the sensation in your feet",
+        "Observe your surroundings mindfully",
+        "Focus on the present moment"
+      ]
+    }
+  ];
+
+  const emergencyContacts = [
+    {
+      name: "National Crisis Hotline",
+      number: "1-800-273-8255",
+      available: "24/7"
+    },
+    {
+      name: "Mental Health Emergency",
+      number: "1-800-950-6264",
+      available: "24/7"
+    },
+    {
+      name: "Suicide Prevention Lifeline",
+      number: "988",
+      available: "24/7"
+    }
+  ];
+
+  
+
+
+  const handleActivitySelect = (activity) => {
+    setSelectedActivity(activity);
+    setActivityModalVisible(true);
+  };
+
+  const ActivityModal = () => (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={activityModalVisible}
+      onRequestClose={() => setActivityModalVisible(false)}
+    >
+      <View style={styles.modalBackground}>
+        <View style={styles.activityModal}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>{selectedActivity?.name}</Text>
+            <TouchableOpacity onPress={() => setActivityModalVisible(false)}>
+              <Feather name="x" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.activityModalContent}>
+            <View style={styles.activitySection}>
+              <LinearGradient
+                colors={['#00BFFF', '#4169E1']}
+                style={styles.activityHeaderGradient}
+              >
+                <Feather name={selectedActivity?.icon} size={32} color="white" />
+                <Text style={styles.activityDurationLarge}>{selectedActivity?.duration}</Text>
+              </LinearGradient>
+            </View>
+            
+            <Text style={styles.activityDescription}>{selectedActivity?.description}</Text>
+            
+            <Text style={styles.sectionHeader}>Steps to Follow:</Text>
+            {selectedActivity?.steps.map((step, index) => (
+              <View key={index} style={styles.stepItem}>
+                <View style={styles.stepNumber}>
+                  <Text style={styles.stepNumberText}>{index + 1}</Text>
+                </View>
+                <Text style={styles.stepText}>{step}</Text>
+              </View>
+            ))}
+
+            <Text style={styles.sectionHeader}>Benefits:</Text>
+            {selectedActivity?.benefits.map((benefit, index) => (
+              <View key={index} style={styles.benefitItem}>
+                <Feather name="check-circle" size={20} color="#4169E1" />
+                <Text style={styles.benefitText}>{benefit}</Text>
+              </View>
+            ))}
+
+            <TouchableOpacity 
+              style={styles.startActivityButton}
+              onPress={() => {
+                setActivityModalVisible(false);
+                if (selectedActivity.name === 'Guided Meditation') {
+                  setMeditationModalVisible(true);
+                } else if (selectedActivity.name === 'Gratitude Journal') {
+                  setJournalModalVisible(true);
+                } else if (selectedActivity.name === 'Mindful Breathing') {
+                  // You can add a specific breathing exercise modal here
+                  setMeditationModalVisible(true);
+                }
+              }}
+            >
+              <LinearGradient
+                colors={['#00BFFF', '#4169E1']}
+                style={styles.startActivityGradient}
+              >
+                <Text style={styles.startActivityText}>Start Activity</Text>
+                <Feather name="arrow-right" size={24} color="white" />
+              </LinearGradient>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+
 
   useEffect(() => {
     selectRandomThought();
@@ -91,8 +304,19 @@ const HomePage = () => {
       toggleJournalModal();
     } else if (action === 'Mood') {
       setMoodTrackerVisible(true);
+    } else if (action === 'Meditate') {
+      setMeditationModalVisible(true);
+    } else if (action === 'Get Help') {
+      setHelpModalVisible(true);
     }
-    // Handle other actions as needed
+  };
+
+  const startMeditation = (meditation) => {
+    setSelectedMeditation(meditation);
+  };
+
+  const callEmergency = (number) => {
+    Linking.openURL(`tel:${number}`);
   };
   const sendMessage = () => {
     if (message.trim()) {
@@ -104,6 +328,115 @@ const HomePage = () => {
       }, 1000);
     }
   };
+
+
+  const MeditationModal = () => (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={meditationModalVisible}
+      onRequestClose={() => setMeditationModalVisible(false)}
+    >
+      <View style={styles.modalBackground}>
+        <View style={styles.meditationModal}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Meditation Guide</Text>
+            <TouchableOpacity onPress={() => setMeditationModalVisible(false)}>
+              <Feather name="x" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.meditationContent}>
+            {selectedMeditation ? (
+              <View style={styles.meditationDetail}>
+                <Text style={styles.meditationTitle}>{selectedMeditation.title}</Text>
+                <Text style={styles.meditationDuration}>{selectedMeditation.duration}</Text>
+                <Text style={styles.meditationDescription}>{selectedMeditation.description}</Text>
+                <Text style={styles.stepsTitle}>Steps:</Text>
+                {selectedMeditation.steps.map((step, index) => (
+                  <Text key={index} style={styles.stepText}>
+                    {index + 1}. {step}
+                  </Text>
+                ))}
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => setSelectedMeditation(null)}
+                >
+                  <Text style={styles.backButtonText}>Back to List</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              meditations.map((meditation) => (
+                <TouchableOpacity
+                  key={meditation.id}
+                  style={styles.meditationCard}
+                  onPress={() => startMeditation(meditation)}
+                >
+                  <LinearGradient
+                    colors={['#00BFFF', '#4169E1']}
+                    style={styles.meditationGradient}
+                  >
+                    <Text style={styles.meditationCardTitle}>{meditation.title}</Text>
+                    <Text style={styles.meditationCardDuration}>{meditation.duration}</Text>
+                    <Text style={styles.meditationCardDescription}>
+                      {meditation.description}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ))
+            )}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+
+  const HelpModal = () => (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={helpModalVisible}
+      onRequestClose={() => setHelpModalVisible(false)}
+    >
+      <View style={styles.modalBackground}>
+        <View style={styles.helpModal}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Emergency Contacts</Text>
+            <TouchableOpacity onPress={() => setHelpModalVisible(false)}>
+              <Feather name="x" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.helpContent}>
+            <Text style={styles.helpText}>
+              If you're experiencing a mental health emergency, please reach out to one of these support services:
+            </Text>
+            {emergencyContacts.map((contact, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.contactCard}
+                onPress={() => callEmergency(contact.number)}
+              >
+                <LinearGradient
+                  colors={['#00BFFF', '#4169E1']}
+                  style={styles.contactGradient}
+                >
+                  <Text style={styles.contactName}>{contact.name}</Text>
+                  <Text style={styles.contactNumber}>{contact.number}</Text>
+                  <Text style={styles.contactAvailable}>{contact.available}</Text>
+                  <View style={styles.callButton}>
+                    <Feather name="phone" size={20} color="white" />
+                    <Text style={styles.callButtonText}>Call Now</Text>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))}
+            <Text style={styles.helpDisclaimer}>
+              These services are confidential and available 24/7. Don't hesitate to reach out if you need support.
+            </Text>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
 
   const DrawerContent = () => (
     <LinearGradient colors={['#00BFFF', '#4169E1']} style={styles.drawerContent}>
@@ -171,29 +504,54 @@ const HomePage = () => {
     </Modal>
   );
 
+  const RecommendedActivities = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Recommended Activities</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.activitiesScroll}>
+        {recommendedActivities.map((item, index) => (
+          <TouchableOpacity 
+            key={index} 
+            style={styles.activityCard}
+            onPress={() => handleActivitySelect(item)}
+          >
+            <LinearGradient
+              colors={['#00BFFF', '#4169E1']}
+              style={styles.activityGradient}
+            >
+              <Feather name={item.icon} size={24} color="white" />
+              <Text style={styles.activityTitle}>{item.name}</Text>
+              <Text style={styles.activityDuration}>{item.duration}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  );
+
   const MainContent = () => (
     <SafeAreaView style={styles.container}>
-    <StatusBar barStyle="dark-content" />
-    <LinearGradient colors={['#00BFFF', '#4169E1']} style={styles.header}>
-      <View style={styles.headerContent}>
-        <Text style={styles.appname}>TogetherWeHeal</Text>
-        <TouchableOpacity style={styles.menuButton} onPress={toggleDrawer}>
-          <Feather name="menu" size={24} color="white" />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>Welcome, {userName || 'Friend'}</Text>
-        <Text style={styles.headerSubText}>How are you feeling today?</Text>
-      </View>
-    </LinearGradient>
+      <StatusBar barStyle="dark-content" />
+      <LinearGradient colors={['#00BFFF', '#4169E1']} style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.appname}>TogetherWeHeal</Text>
+          <TouchableOpacity style={styles.menuButton} onPress={toggleDrawer}>
+            <Feather name="menu" size={24} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.headerText}>Welcome, {userName || 'Friend'}</Text>
+          <Text style={styles.headerSubText}>How are you feeling today?</Text>
+        </View>
+      </LinearGradient>
 
-    <ScrollView style={styles.content}>
+      <ScrollView style={styles.content}>
         <View style={styles.thoughtCard}>
           <LinearGradient
             colors={['#4169E1', '#00BFFF']}
             style={styles.thoughtGradient}
           >
-            <Text style={styles.thoughtText}>{currentThought}</Text>
+            <Text style={styles.thoughtText}>"{currentThought}"</Text>
           </LinearGradient>
         </View>
+        
         <View style={styles.quickActions}>
           {[
             { name: 'Journal', icon: 'book-open' },
@@ -214,13 +572,11 @@ const HomePage = () => {
               </LinearGradient>
               <Text style={styles.actionText}>{item.name}</Text>
             </TouchableOpacity>
-            
           ))}
-        
         </View>
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Daily Reflection</Text>
+          <Text style={styles.sectionTitle}>Meeting With Professional</Text>
           <TouchableOpacity style={styles.reflectionCard}>
             <LinearGradient
               colors={['#00BFFF', '#4169E1']}
@@ -232,29 +588,7 @@ const HomePage = () => {
           </TouchableOpacity>
         </View>
         
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recommended Activities</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.activitiesScroll}>
-            {[
-              { name: 'Mindful Breathing', icon: 'wind', duration: '5 min' },
-              { name: 'Guided Meditation', icon: 'headphones', duration: '10 min' },
-              { name: 'Gratitude Journal', icon: 'heart', duration: '15 min' },
-            ].map((item, index) => (
-              <TouchableOpacity key={index} style={styles.activityCard}>
-                <LinearGradient
-                  colors={['#00BFFF', '#4169E1']}
-                  style={styles.activityGradient}
-                >
-                  <Feather name={item.icon} size={24} color="white" />
-                  <Text style={styles.activityTitle}>{item.name}</Text>
-                  <Text style={styles.activityDuration}>{item.duration}</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-        
-        
+        <RecommendedActivities />
       </ScrollView>
 
       <TouchableOpacity style={styles.chatButton} onPress={toggleChat}>
@@ -304,10 +638,13 @@ const HomePage = () => {
       </Modal>
 
       <JournalModal />
+      <MeditationModal />
+      <HelpModal />
+      <ActivityModal />
       <MoodTracker 
-      visible={moodTrackerVisible} 
-      onClose={() => setMoodTrackerVisible(false)}
-    />
+        visible={moodTrackerVisible} 
+        onClose={() => setMoodTrackerVisible(false)}
+      />
     </SafeAreaView>
   );
 
@@ -345,12 +682,245 @@ const HomePage = () => {
       >
         <DrawerContent />
       </Animated.View>
-      <MainContent />
+      <>
+        <MainContent />
+        <MeditationModal />
+        <HelpModal />
+      </>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  activityModal: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: '80%',
+  },
+  activityModalContent: {
+    padding: 20,
+  },
+  activitySection: {
+    marginBottom: 20,
+  },
+  activityHeaderGradient: {
+    padding: 20,
+    borderRadius: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  activityDurationLarge: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  activityDescription: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#333',
+    marginBottom: 20,
+  },
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4169E1',
+    marginTop: 20,
+    marginBottom: 15,
+  },
+  stepItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  stepNumber: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#4169E1',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  stepNumberText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  stepText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+  benefitItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  benefitText: {
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 10,
+  },
+  startActivityButton: {
+    marginTop: 30,
+    marginBottom: 20,
+  },
+  startActivityGradient: {
+    padding: 15,
+    borderRadius: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  startActivityText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginRight: 10,
+  },
+  meditationModal: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: '80%',
+  },
+  helpModal: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  meditationContent: {
+    padding: 15,
+  },
+  helpContent: {
+    padding: 15,
+  },
+  meditationCard: {
+    marginBottom: 15,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  meditationGradient: {
+    padding: 20,
+  },
+  meditationCardTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  meditationCardDuration: {
+    color: 'white',
+    fontSize: 14,
+    marginBottom: 10,
+  },
+  meditationCardDescription: {
+    color: 'white',
+    fontSize: 14,
+  },
+  meditationDetail: {
+    padding: 20,
+  },
+  meditationTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#4169E1',
+  },
+  meditationDuration: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 15,
+  },
+  meditationDescription: {
+    fontSize: 16,
+    marginBottom: 20,
+    lineHeight: 24,
+  },
+  stepsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#4169E1',
+  },
+  stepText: {
+    fontSize: 16,
+    marginBottom: 10,
+    lineHeight: 24,
+  },
+  backButton: {
+    backgroundColor: '#4169E1',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  backButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  helpText: {
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 20,
+    color: '#333',
+  },
+  contactCard: {
+    marginBottom: 15,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  contactGradient: {
+    padding: 20,
+  },
+  contactName: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  contactNumber: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  contactAvailable: {
+    color: 'white',
+    fontSize: 14,
+    marginBottom: 15,
+  },
+  callButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 10,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  callButtonText: {
+    color: 'white',
+    marginLeft: 10,
+    fontWeight: 'bold',
+  },
+  helpDisclaimer: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    color: '#666',
+    marginTop: 20,
+    textAlign: 'center',
+  },
   appname:{
     fontSize:21,
     color:"#ffff66"
