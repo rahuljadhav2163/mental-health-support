@@ -28,7 +28,7 @@ export default function RootLayout() {
       options={{ headerShown: true }}
       />
        <Stack.Screen name="appointment"
-      options={{ headerShown: false }}
+      options={{ headerShown: true }}
       />
     </Stack>
   );
