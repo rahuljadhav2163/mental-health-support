@@ -27,6 +27,9 @@ export default function RootLayout() {
       <Stack.Screen name="settings"
       options={{ headerShown: true }}
       />
+       <Stack.Screen name="appointment"
+      options={{ headerShown: false }}
+      />
     </Stack>
   );
 }

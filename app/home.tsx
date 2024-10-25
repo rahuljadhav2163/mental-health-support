@@ -15,7 +15,8 @@ import {
   TextInput,
   KeyboardAvoidingView,
   FlatList,
-  Linking
+  Linking,
+  Alert
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -143,6 +144,49 @@ const HomePage = () => {
   const [selectedMeditation, setSelectedMeditation] = useState(null);
   const [activityModalVisible, setActivityModalVisible] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const checkLoginAndProceed = (action, featureName) => {
+    if (!isLoggedIn) {
+      Alert.alert(
+        "Login Required",
+        `Please log in to access ${featureName}`,
+        [
+          {
+            text: "Login",
+            onPress: () => router.push('/login'),
+          },
+          {
+            text: "Cancel",
+            style: "cancel"
+          }
+        ]
+      );
+      return false;
+    }
+    return true;
+  };
+
+  useEffect(() => {
+    checkUserLoginStatus();
+  }, []);
+
+  const checkUserLoginStatus = async () => {
+    try {
+      const userData = await SecureStore.getItemAsync('userData');
+      if (userData) {
+        const parsedUserData = JSON.parse(userData);
+        setIsLoggedIn(true);
+        
+        setUserName(parsedUserData.name || 'Friend'); 
+      } else {
+        setIsLoggedIn(false);
+      }
+    } catch (error) {
+      console.error('Error checking login status:', error);
+      setIsLoggedIn(false);
+    }
+  };
 
   const handleChatbotAction = (action) => {
     switch (action) {
@@ -289,6 +333,7 @@ const HomePage = () => {
 
 
   const handleActivitySelect = (activity) => {
+    if (!checkLoginAndProceed('activity', 'activities')) return;
     setSelectedActivity(activity);
     setActivityModalVisible(true);
   };
@@ -414,6 +459,7 @@ const HomePage = () => {
   };
 
   const toggleChat = () => {
+    if (!checkLoginAndProceed('chat', 'chat feature')) return;
     setChatVisible(!chatVisible);
   };
 
@@ -422,20 +468,29 @@ const HomePage = () => {
   };
 
   const handleQuickAction = (action) => {
-    if (action === 'Journal') {
-      toggleJournalModal();
-    } else if (action === 'Mood') {
-      setMoodTrackerVisible(true);
-    } else if (action === 'Meditate') {
-      setMeditationModalVisible(true);
-    } else if (action === 'Get Help') {
-      setHelpModalVisible(true);
+    if (!checkLoginAndProceed(action, action)) return;
+
+    switch (action) {
+      case 'Journal':
+        toggleJournalModal();
+        break;
+      case 'Mood':
+        setMoodTrackerVisible(true);
+        break;
+      case 'Meditate':
+        setMeditationModalVisible(true);
+        break;
+      case 'Get Help':
+        setHelpModalVisible(true);
+        break;
     }
   };
 
   const startMeditation = (meditation) => {
+    if (!checkLoginAndProceed('meditation', 'meditation')) return;
     setSelectedMeditation(meditation);
   };
+
 
   const callEmergency = (number) => {
     Linking.openURL(`tel:${number}`);
@@ -598,6 +653,8 @@ const HomePage = () => {
 
   const DrawerContent = () => {
     const handleNavigation = (screenName) => {
+      if (!checkLoginAndProceed(screenName, screenName)) return;
+
       switch (screenName) {
         case 'Profile':
           router.push('/profile');
@@ -621,6 +678,7 @@ const HomePage = () => {
           break;
       }
 
+      // Close drawer after navigation
       // Close drawer after navigation
       if (Platform.OS === 'android') {
         drawerRef.current?.closeDrawer();
@@ -652,6 +710,12 @@ const HomePage = () => {
       </LinearGradient>
     );
   };
+
+  const handleAppointmentNav = () => {
+    if (!checkLoginAndProceed('appointment', 'appointment booking')) return;
+    router.push("/appointment");
+  };
+
 
   const JournalModal = () => (
     <Modal
@@ -721,7 +785,6 @@ const HomePage = () => {
       </ScrollView>
     </View>
   );
-
   const MainContent = () => (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -775,9 +838,10 @@ const HomePage = () => {
             <LinearGradient
               colors={['#00BFFF', '#4169E1']}
               style={styles.reflectionGradient}
+              
             >
-              <Text style={styles.reflectionText}>Take a moment to reflect on your day</Text>
-              <Feather name="chevron-right" size={24} color="white" />
+              <Text onPress={()=>{router.push("/appointment")}} style={styles.reflectionText}>Take a moment to reflect on your day</Text>
+              <Feather name="chevron-right" size={24} color="white" onPress={()=>{router.push("/appointment")}} />
             </LinearGradient>
           </TouchableOpacity>
         </View>
