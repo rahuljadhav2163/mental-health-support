@@ -435,10 +435,6 @@ const HomePage = () => {
     );
   };
 
-
-
-
-
   const toggleDrawer = () => {
     if (Platform.OS === 'android') {
       if (drawerRef.current) {
