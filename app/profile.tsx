@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Dimensions, ActivityIndicator, Alert } from 'react-native';
+import { Text, View, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Dimensions, ActivityIndicator, Alert, TextInput } from 'react-native';
 import { Link, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -10,6 +10,8 @@ const { width } = Dimensions.get('window');
 function Profile() {
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedData, setEditedData] = useState(null);
 
   useEffect(() => {
     checkAuthStatus();
@@ -23,6 +25,7 @@ function Profile() {
       if (isLoggedIn === 'true' && userDataString) {
         const parsedUserData = JSON.parse(userDataString);
         setUserData(parsedUserData);
+        setEditedData(parsedUserData);
       }
     } catch (error) {
       console.error('Error checking auth status:', error);
@@ -58,7 +61,31 @@ function Profile() {
       { cancelable: true }
     );
   };
-  
+
+  const handleEditToggle = () => {
+    if (isEditing) {
+      setEditedData(userData); // Reset changes if canceling
+    }
+    setIsEditing(!isEditing);
+  };
+
+  const handleSaveChanges = async () => {
+    // Basic validation
+    if (!editedData.fullName?.trim() || !editedData.mobile?.trim()) {
+      Alert.alert('Error', 'Name and mobile number are required');
+      return;
+    }
+
+    try {
+      await SecureStore.setItemAsync('userData', JSON.stringify(editedData));
+      setUserData(editedData);
+      setIsEditing(false);
+      Alert.alert('Success', 'Profile updated successfully');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      Alert.alert('Error', 'Failed to save profile changes');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -81,33 +108,86 @@ function Profile() {
               <View style={styles.avatarContainer}>
                 <MaterialCommunityIcons name="account-circle" size={100} color="white" />
               </View>
-              <Text style={styles.profileName}>{userData.fullName}</Text>
-              <Text style={styles.profileInfo}>{userData.mobile}</Text>
+              {isEditing ? (
+                <View style={styles.editForm}>
+                  <TextInput
+                    style={styles.input}
+                    value={editedData.fullName}
+                    onChangeText={(text) => setEditedData(prev => ({ ...prev, fullName: text }))}
+                    placeholder="Full Name"
+                    placeholderTextColor="#666"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    value={editedData.mobile}
+                    onChangeText={(text) => setEditedData(prev => ({ ...prev, mobile: text }))}
+                    placeholder="Mobile Number"
+                    placeholderTextColor="#666"
+                    keyboardType="phone-pad"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    value={editedData.email}
+                    onChangeText={(text) => setEditedData(prev => ({ ...prev, email: text }))}
+                    placeholder="Email"
+                    placeholderTextColor="#666"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+              ) : (
+                <>
+                  <Text style={styles.profileName}>{userData.fullName}</Text>
+                  <Text style={styles.profileInfo}>{userData.mobile}</Text>
+                  {userData.email && <Text style={styles.profileInfo}>{userData.email}</Text>}
+                </>
+              )}
             </View>
 
             <View style={styles.profileActions}>
-              <TouchableOpacity 
-                style={styles.actionButton}
-                onPress={() => router.push("/")}
-              >
-                <MaterialCommunityIcons name="account-edit" size={24} color="#4169E1" />
-                <Text style={styles.actionButtonText}>Edit Profile</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.actionButton}
-                onPress={() => router.push("/settings")}
-              >
-                <MaterialCommunityIcons name="cog" size={24} color="#4169E1" />
-                <Text style={styles.actionButtonText}>Settings</Text>
-              </TouchableOpacity>
+              {isEditing ? (
+                <>
+                  <TouchableOpacity 
+                    style={[styles.actionButton, styles.saveButton]}
+                    onPress={handleSaveChanges}
+                  >
+                    <MaterialCommunityIcons name="content-save" size={24} color="#4169E1" />
+                    <Text style={styles.actionButtonText}>Save Changes</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.actionButton, styles.cancelButton]}
+                    onPress={handleEditToggle}
+                  >
+                    <MaterialCommunityIcons name="close" size={24} color="#FF4444" />
+                    <Text style={[styles.actionButtonText, styles.cancelText]}>Cancel</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <TouchableOpacity 
+                    style={styles.actionButton}
+                    onPress={handleEditToggle}
+                  >
+                    <MaterialCommunityIcons name="account-edit" size={24} color="#4169E1" />
+                    <Text style={styles.actionButtonText}>Edit Profile</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.actionButton}
+                    onPress={() => router.push("/settings")}
+                  >
+                    <MaterialCommunityIcons name="cog" size={24} color="#4169E1" />
+                    <Text style={styles.actionButtonText}>Settings</Text>
+                  </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={[styles.actionButton, styles.logoutButton]}
-                onPress={handleLogout}
-              >
-                <MaterialCommunityIcons name="logout" size={24} color="#FF4444" />
-                <Text style={[styles.actionButtonText, styles.logoutText]}>Logout</Text>
-              </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.actionButton, styles.logoutButton]}
+                    onPress={handleLogout}
+                  >
+                    <MaterialCommunityIcons name="logout" size={24} color="#FF4444" />
+                    <Text style={[styles.actionButtonText, styles.logoutText]}>Logout</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
           </View>
         </SafeAreaView>
@@ -155,8 +235,103 @@ function Profile() {
     </LinearGradient>
   );
 }
-
 const styles = StyleSheet.create({
+  editForm: {
+    width: width - 80,
+    alignItems: 'center',
+  },
+  input: {
+    backgroundColor: 'white',
+    width: '100%',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+    fontSize: 16,
+    color: '#333',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  saveButton: {
+    backgroundColor: '#E8F4FF',
+    borderColor: '#4169E1',
+    borderWidth: 1,
+  },
+  cancelButton: {
+    backgroundColor: '#FFF0F0',
+    borderColor: '#FF4444',
+    borderWidth: 1,
+  },
+  cancelText: {
+    color: '#FF4444',
+  },
+  container: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileHeader: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  avatarContainer: {
+    marginBottom: 20,
+  },
+  profileName: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  profileInfo: {
+    color: 'white',
+    fontSize: 16,
+    opacity: 0.9,
+  },
+  profileActions: {
+    width: width - 80,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 15,
+    marginBottom: 15,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  actionButtonText: {
+    marginLeft: 15,
+    fontSize: 16,
+    color: '#4169E1',
+    fontWeight: '600',
+  },
+  logoutButton: {
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: '#FF4444',
+  },
+  logoutText: {
+    color: '#FF4444',
+  },
   container: {
     flex: 1,
   },
