@@ -145,6 +145,7 @@ const HomePage = () => {
   const [activityModalVisible, setActivityModalVisible] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [inputMessage, setInputMessage] = useState('');
 
   const checkLoginAndProceed = (action, featureName) => {
     if (!isLoggedIn) {
@@ -177,8 +178,8 @@ const HomePage = () => {
       if (userData) {
         const parsedUserData = JSON.parse(userData);
         setIsLoggedIn(true);
-        
-        setUserName(parsedUserData.name || 'Friend'); 
+
+        setUserName(parsedUserData.name || 'Friend');
       } else {
         setIsLoggedIn(false);
       }
@@ -493,18 +494,20 @@ const HomePage = () => {
   };
 
   const sendMessage = () => {
-    if (message.trim()) {
+    if (inputMessage.trim()) {
       // Add user message
       const userMessage = {
         id: Date.now(),
-        text: message,
+        text: inputMessage,
         sender: 'user'
       };
       setChatMessages(prevMessages => [...prevMessages, userMessage]);
-      setMessage('');
+
+      // Clear input after sending
+      setInputMessage('');
 
       // Generate and add bot response
-      const { text, action } = generateResponse(message);
+      const { text, action } = generateResponse(inputMessage);
       setTimeout(() => {
         setChatMessages(prevMessages => [
           ...prevMessages,
@@ -529,7 +532,7 @@ const HomePage = () => {
           key={index}
           style={styles.suggestionButton}
           onPress={() => {
-            setMessage(suggestion);
+            setInputMessage(suggestion);
             sendMessage();
           }}
         >
@@ -834,10 +837,10 @@ const HomePage = () => {
             <LinearGradient
               colors={['#00BFFF', '#4169E1']}
               style={styles.reflectionGradient}
-              
+
             >
-              <Text onPress={()=>{router.push("/appointment")}} style={styles.reflectionText}>Take a moment to reflect on your day</Text>
-              <Feather name="chevron-right" size={24} color="white" onPress={()=>{router.push("/appointment")}} />
+              <Text onPress={() => { router.push("/appointment") }} style={styles.reflectionText}>Take a moment to reflect on your day</Text>
+              <Feather name="chevron-right" size={24} color="white" onPress={() => { router.push("/appointment") }} />
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -845,7 +848,9 @@ const HomePage = () => {
         <RecommendedActivities />
       </ScrollView>
 
-      <TouchableOpacity style={styles.chatButton} onPress={toggleChat}>
+      <TouchableOpacity style={styles.chatButton} onPress={() => {
+        router.push('/chatbot')
+      }}>
         <LinearGradient colors={['#00BFFF', '#4169E1']} style={styles.chatButtonGradient}>
           <Feather name="message-circle" size={24} color="white" />
         </LinearGradient>
@@ -881,11 +886,20 @@ const HomePage = () => {
                 style={styles.chatInput}
                 placeholder="Type your message..."
                 placeholderTextColor="#aaa"
-                value={message}
-                onChangeText={setMessage}
+                value={inputMessage}
+                onChangeText={text => setInputMessage(text)}
+                onSubmitEditing={sendMessage}
+                returnKeyType="send"
               />
-              <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-              <Feather name="arrow-right-circle" size={24} color="black" />
+              <TouchableOpacity
+                style={styles.sendButton}
+                onPress={() => {
+                  if (inputMessage.trim()) {
+                    sendMessage();
+                  }
+                }}
+              >
+                <Feather name="arrow-right-circle" size={24} color="black" />
               </TouchableOpacity>
             </KeyboardAvoidingView>
           </View>
@@ -1474,7 +1488,7 @@ const styles = StyleSheet.create({
   sendButton: {
     width: 40,
     height: 40,
-    marginTop:10
+    marginTop: 10
   },
   journalModal: {
     backgroundColor: 'white',

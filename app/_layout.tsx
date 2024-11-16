@@ -6,6 +6,9 @@ export default function RootLayout() {
       <Stack.Screen name="index"
       options={{ headerShown: false }}
       />
+      <Stack.Screen name="chatbot"
+      options={{ headerShown: false }}
+      />
       <Stack.Screen name="profile"
       options={{ headerShown: false }}
       />
